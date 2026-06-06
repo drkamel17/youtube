@@ -1,48 +1,64 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
-import type { Profile } from "@/types/database";
+import { useState } from "react";
+import { signUp } from "@/lib/auth";
 import Sidebar from "@/components/Sidebar";
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<Profile[]>([]);
+  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [msg, setMsg] = useState("");
 
-  useEffect(() => {
-    supabase.from("profiles").select("*").order("username").then(({ data }) => {
-      setUsers(data ?? []);
-    });
-  }, []);
-
-  async function toggleRole(userId: string, currentRole: string) {
-    const newRole = currentRole === "admin" ? "user" : "admin";
-    await supabase.from("profiles").update({ role: newRole }).eq("id", userId);
-    setUsers((prev) =>
-      prev.map((u) => (u.id === userId ? { ...u, role: newRole as "admin" | "user" } : u))
-    );
+  async function handleAdd(e: React.FormEvent) {
+    e.preventDefault();
+    setMsg("");
+    const { error } = await signUp(email, password, username);
+    if (error) {
+      setMsg(`Erreur : ${error.message}`);
+    } else {
+      setMsg("Utilisateur créé avec succès !");
+      setEmail("");
+      setUsername("");
+      setPassword("");
+    }
   }
 
   return (
     <div className="flex min-h-screen bg-black text-white">
       <Sidebar />
       <div className="flex-1 p-6 max-w-lg mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Utilisateurs</h1>
-        <div className="flex flex-col gap-2">
-          {users.map((user) => (
-            <div key={user.id} className="flex items-center justify-between bg-zinc-900 p-3 rounded">
-              <div>
-                <span className="font-semibold">{user.username}</span>
-                <span className="text-sm text-zinc-500 ml-2">({user.role})</span>
-              </div>
-              <button
-                onClick={() => toggleRole(user.id, user.role)}
-                className="text-sm px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700"
-              >
-                Basculer rôle
-              </button>
-            </div>
-          ))}
-        </div>
+        <h1 className="text-2xl font-bold mb-6">Ajouter un utilisateur</h1>
+        <form onSubmit={handleAdd} className="flex flex-col gap-4">
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="p-3 rounded bg-zinc-800"
+          />
+          <input
+            type="text"
+            placeholder="Nom d'utilisateur"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            className="p-3 rounded bg-zinc-800"
+          />
+          <input
+            type="password"
+            placeholder="Mot de passe"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="p-3 rounded bg-zinc-800"
+          />
+          <button type="submit" className="p-3 rounded bg-red-600 hover:bg-red-700 font-semibold">
+            Ajouter
+          </button>
+          {msg && <p className="text-sm text-zinc-400">{msg}</p>}
+        </form>
       </div>
     </div>
   );

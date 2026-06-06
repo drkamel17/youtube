@@ -64,7 +64,7 @@ export default function AssignPage() {
           onChange={(e) => setSelectedUser(e.target.value)}
         >
           <option value="">Sélectionner un utilisateur</option>
-          {users.map((user) => (
+          {users.filter((u) => u.role !== "admin").map((user) => (
             <option key={user.id} value={user.id}>
               {user.username}
             </option>
