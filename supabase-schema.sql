@@ -118,9 +118,32 @@ create policy "user read own categories" on user_categories
     for select using (user_id = auth.uid());
 
 -- ============================================
+-- 5. PAGE_VIEWS (statistiques)
+-- ============================================
+create table if not exists page_views (
+    id bigint generated always as identity primary key,
+    user_id uuid references profiles(id) on delete cascade,
+    page text not null,
+    visited_at timestamp default now()
+);
+
+alter table page_views enable row level security;
+
+create policy "page_views select for admin"
+on page_views for select
+using (public.is_admin());
+
+create policy "page_views insert for auth"
+on page_views for insert
+with check (auth.role() = 'authenticated');
+
+-- ============================================
 -- INDEX
 -- ============================================
 create index if not exists idx_videos_category on videos(category_id);
 create index if not exists idx_videos_position on videos(position);
 create index if not exists idx_videos_favorite on videos(favorite);
 create index if not exists idx_user_categories_user on user_categories(user_id);
+create index if not exists idx_page_views_user on page_views(user_id);
+create index if not exists idx_page_views_page on page_views(page);
+create index if not exists idx_page_views_date on page_views(visited_at);

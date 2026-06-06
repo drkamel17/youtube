@@ -37,6 +37,7 @@ function SidebarContent() {
     { href: "/videos/add", label: "Ajouter vidéo", adminOnly: true },
     { href: "/categories", label: "Catégories", adminOnly: true },
     { href: "/dashboard?fav=1", label: "★ Favoris", adminOnly: false },
+    { href: "/stats", label: "Statistiques", adminOnly: true },
     { href: "/users", label: "Utilisateurs", adminOnly: true },
     { href: "/assign", label: "Assignation", adminOnly: true },
   ].filter((l) => !l.adminOnly || isAdmin);

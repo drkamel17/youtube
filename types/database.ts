@@ -24,3 +24,10 @@ export type UserCategory = {
   user_id: string;
   category_id: number;
 };
+
+export type PageView = {
+  id: number;
+  user_id: string;
+  page: string;
+  visited_at: string;
+};
