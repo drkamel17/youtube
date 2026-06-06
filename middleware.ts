@@ -4,7 +4,6 @@ import type { NextRequest } from "next/server";
 const protectedRoutes = ["/dashboard", "/videos", "/categories", "/users", "/assign"];
 
 export async function middleware(request: NextRequest) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const { pathname } = request.nextUrl;
 
   const hasAuthCookie = request.cookies.getAll().some((c) =>
