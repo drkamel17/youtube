@@ -5,7 +5,6 @@ import { signUp } from "@/lib/auth";
 import Sidebar from "@/components/Sidebar";
 
 export default function UsersPage() {
-  const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
@@ -13,12 +12,12 @@ export default function UsersPage() {
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     setMsg("");
+    const email = `${username}@youtube-library.local`;
     const { error } = await signUp(email, password, username);
     if (error) {
       setMsg(`Erreur : ${error.message}`);
     } else {
       setMsg("Utilisateur créé avec succès !");
-      setEmail("");
       setUsername("");
       setPassword("");
     }
@@ -30,14 +29,6 @@ export default function UsersPage() {
       <div className="flex-1 p-6 max-w-lg mx-auto">
         <h1 className="text-2xl font-bold mb-6">Ajouter un utilisateur</h1>
         <form onSubmit={handleAdd} className="flex flex-col gap-4">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="p-3 rounded bg-zinc-800"
-          />
           <input
             type="text"
             placeholder="Nom d'utilisateur"
