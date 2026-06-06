@@ -46,6 +46,8 @@ export default function DashboardPage() {
     const user = await getCurrentUser();
     if (!user) return;
 
+    setShowFav(window.location.search.includes("fav=1"));
+
     const role = await getUserRole();
     setIsAdmin(role === "admin");
 
@@ -87,15 +89,7 @@ export default function DashboardPage() {
             selected={selectedCategory}
             onSelect={setSelectedCategory}
           />
-          <div className="flex items-center gap-2 mb-4">
-            <button
-              onClick={() => setShowFav(!showFav)}
-              className={`px-4 py-2 rounded ${showFav ? "bg-red-600" : "bg-zinc-800 hover:bg-zinc-700"}`}
-            >
-              {showFav ? "★ Favoris" : "☆ Favoris"}
-            </button>
-            <SearchBar value={search} onChange={setSearch} />
-          </div>
+          <SearchBar value={search} onChange={setSearch} />
           <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((video) => (
               <VideoCard

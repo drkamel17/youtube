@@ -12,6 +12,7 @@ export default function Sidebar() {
     { href: "/dashboard", label: "Dashboard" },
     { href: "/videos/add", label: "Ajouter vidéo" },
     { href: "/categories", label: "Catégories" },
+    { href: "/dashboard?fav=1", label: "★ Favoris" },
     { href: "/users", label: "Utilisateurs" },
     { href: "/assign", label: "Assignation" },
   ];
