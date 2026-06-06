@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { Suspense, useEffect, useState, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { Video, Category } from "@/types/database";
 import { getUserRole, getAllowedCategories } from "@/lib/permissions";
@@ -13,11 +14,21 @@ import Sidebar from "@/components/Sidebar";
 import Sortable from "sortablejs";
 
 export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen bg-black text-white items-center justify-center">Chargement…</div>}>
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
+function DashboardContent() {
+  const searchParams = useSearchParams();
+  const showFav = searchParams.get("fav") === "1";
+
   const [videos, setVideos] = useState<Video[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [search, setSearch] = useState("");
-  const [showFav, setShowFav] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -45,8 +56,6 @@ export default function DashboardPage() {
   async function init() {
     const user = await getCurrentUser();
     if (!user) return;
-
-    setShowFav(window.location.search.includes("fav=1"));
 
     const role = await getUserRole();
     setIsAdmin(role === "admin");
