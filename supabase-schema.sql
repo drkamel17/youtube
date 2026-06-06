@@ -52,62 +52,70 @@ create trigger on_auth_user_created
     for each row execute function public.handle_new_user();
 
 -- ============================================
+-- FONCTION is_admin (contourne RLS)
+-- ============================================
+create or replace function public.is_admin()
+returns boolean
+language sql
+security definer
+stable
+as $$
+    select exists (
+        select 1 from public.profiles
+        where id = auth.uid() and role = 'admin'
+    );
+$$;
+
+-- ============================================
 -- ROW LEVEL SECURITY
 -- ============================================
-
--- Activer RLS sur toutes les tables
 alter table categories enable row level security;
 alter table videos enable row level security;
 alter table profiles enable row level security;
 alter table user_categories enable row level security;
 
--- POLICIES : categories
-drop policy if exists "admin full access" on categories;
-create policy "admin full access" on categories
-    for all using (
-        (select role from profiles where id = auth.uid()) = 'admin'
-    );
-
+-- Supprimer toutes les policies existantes
+drop policy if exists "admin full access categories" on categories;
 drop policy if exists "user read categories" on categories;
+drop policy if exists "admin full access videos" on videos;
+drop policy if exists "user read allowed videos" on videos;
+drop policy if exists "admin all profiles" on profiles;
+drop policy if exists "user read own profile" on profiles;
+drop policy if exists "admin all user_categories" on user_categories;
+
+-- CATEGORIES : admin = tout, user = lecture seule
+create policy "admin full access categories" on categories
+    for all using (public.is_admin());
+
 create policy "user read categories" on categories
     for select using (true);
 
--- POLICIES : videos
-drop policy if exists "admin full access videos" on videos;
+-- VIDEOS : admin = tout, user = uniquement ses catégories autorisées
 create policy "admin full access videos" on videos
-    for all using (
-        (select role from profiles where id = auth.uid()) = 'admin'
-    );
+    for all using (public.is_admin());
 
-drop policy if exists "user read allowed videos" on videos;
 create policy "user read allowed videos" on videos
     for select using (
-        (select role from profiles where id = auth.uid()) = 'user'
-        and (
-            category_id in (
-                select category_id from user_categories
-                where user_id = auth.uid()
-            )
+        not public.is_admin()
+        and category_id in (
+            select category_id from user_categories
+            where user_id = auth.uid()
         )
     );
 
--- POLICIES : profiles
-drop policy if exists "admin all profiles" on profiles;
+-- PROFILES : admin = tout, user = son propre profil
 create policy "admin all profiles" on profiles
-    for all using (
-        (select role from profiles where id = auth.uid()) = 'admin'
-    );
+    for all using (public.is_admin());
 
-drop policy if exists "user read own profile" on profiles;
 create policy "user read own profile" on profiles
     for select using (auth.uid() = id);
 
--- POLICIES : user_categories
-drop policy if exists "admin all user_categories" on user_categories;
+-- USER_CATEGORIES : admin = tout, user = lecture seule
 create policy "admin all user_categories" on user_categories
-    for all using (
-        (select role from profiles where id = auth.uid()) = 'admin'
-    );
+    for all using (public.is_admin());
+
+create policy "user read own categories" on user_categories
+    for select using (user_id = auth.uid());
 
 -- ============================================
 -- INDEX
