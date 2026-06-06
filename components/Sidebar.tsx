@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "@/lib/auth";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
 
   const links = [
     { href: "/dashboard", label: "Dashboard" },
@@ -34,7 +35,10 @@ export default function Sidebar() {
         ))}
       </nav>
       <button
-        onClick={() => signOut()}
+        onClick={async () => {
+          await signOut();
+          router.push("/login");
+        }}
         className="p-3 rounded bg-zinc-800 hover:bg-zinc-700 mt-auto"
       >
         Déconnexion
