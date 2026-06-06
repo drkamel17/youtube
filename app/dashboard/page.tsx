@@ -17,6 +17,7 @@ export default function DashboardPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [search, setSearch] = useState("");
+  const [showFav, setShowFav] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -71,6 +72,7 @@ export default function DashboardPage() {
   const filtered = videos.filter((v) => {
     if (selectedCategory && v.category_id !== selectedCategory) return false;
     if (search && !v.title.toLowerCase().includes(search.toLowerCase())) return false;
+    if (showFav && !v.favorite) return false;
     return true;
   });
 
@@ -85,7 +87,15 @@ export default function DashboardPage() {
             selected={selectedCategory}
             onSelect={setSelectedCategory}
           />
-          <SearchBar value={search} onChange={setSearch} />
+          <div className="flex items-center gap-2 mb-4">
+            <button
+              onClick={() => setShowFav(!showFav)}
+              className={`px-4 py-2 rounded ${showFav ? "bg-red-600" : "bg-zinc-800 hover:bg-zinc-700"}`}
+            >
+              {showFav ? "★ Favoris" : "☆ Favoris"}
+            </button>
+            <SearchBar value={search} onChange={setSearch} />
+          </div>
           <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((video) => (
               <VideoCard
