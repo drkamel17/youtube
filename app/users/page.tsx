@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { signUp } from "@/lib/auth";
 import Sidebar from "@/components/Sidebar";
 
 export default function UsersPage() {
@@ -14,16 +13,24 @@ export default function UsersPage() {
     e.preventDefault();
     setMsg("");
     setLoading(true);
-    const email = `${username}@example.com`;
-    const { error } = await signUp(email, password, username);
-    setLoading(false);
-    if (error) {
-      setMsg(`Erreur : ${error.message}`);
-    } else {
-      setMsg("Utilisateur créé avec succès !");
-      setUsername("");
-      setPassword("");
+    try {
+      const res = await fetch("/api/users/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMsg(`Erreur : ${data.error}`);
+      } else {
+        setMsg("Utilisateur créé avec succès !");
+        setUsername("");
+        setPassword("");
+      }
+    } catch {
+      setMsg("Erreur réseau");
     }
+    setLoading(false);
   }
 
   return (
