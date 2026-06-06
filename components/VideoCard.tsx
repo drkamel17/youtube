@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { Video } from "@/types/database";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
@@ -14,11 +15,12 @@ export default function VideoCard({ video, onDelete }: Props) {
     ? new URL(video.youtube_url).searchParams.get("v")
     : video.youtube_url.split("/").pop();
 
+  const [isFav, setIsFav] = useState(video.favorite);
+
   async function toggleFavorite() {
-    await supabase
-      .from("videos")
-      .update({ favorite: !video.favorite })
-      .eq("id", video.id);
+    const newFav = !isFav;
+    setIsFav(newFav);
+    await supabase.from("videos").update({ favorite: newFav }).eq("id", video.id);
   }
 
   async function remove() {
@@ -36,13 +38,13 @@ export default function VideoCard({ video, onDelete }: Props) {
       <div className="p-3">
         <h3 className="font-semibold truncate">{video.title}</h3>
         <div className="flex gap-2 mt-2">
-          <button onClick={toggleFavorite} className="text-sm px-2 py-1 rounded bg-zinc-800">
-            {video.favorite ? "★" : "☆"}
+          <button onClick={toggleFavorite} className="text-sm px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700">
+            {isFav ? "★" : "☆"}
           </button>
-          <Link href={`/videos/${video.id}/edit`} className="text-sm px-2 py-1 rounded bg-zinc-800">
+          <Link href={`/videos/${video.id}/edit`} className="text-sm px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700">
             Modifier
           </Link>
-          <button onClick={remove} className="text-sm px-2 py-1 rounded bg-red-600">
+          <button onClick={remove} className="text-sm px-3 py-1 rounded bg-red-600 hover:bg-red-700">
             Supprimer
           </button>
         </div>
