@@ -58,18 +58,39 @@ export default function AssignPage() {
       <Sidebar />
       <div className="flex-1 p-6 max-w-lg mx-auto">
         <h1 className="text-2xl font-bold mb-6">Assignation catégories</h1>
-        <select
-          className="w-full p-3 mb-4 rounded bg-zinc-800"
-          value={selectedUser}
-          onChange={(e) => setSelectedUser(e.target.value)}
-        >
-          <option value="">Sélectionner un utilisateur</option>
-          {users.filter((u) => u.role !== "admin").map((user) => (
-            <option key={user.id} value={user.id}>
-              {user.username}
-            </option>
-          ))}
-        </select>
+        <div className="flex gap-2 mb-4">
+          <select
+            className="flex-1 p-3 rounded bg-zinc-800"
+            value={selectedUser}
+            onChange={(e) => setSelectedUser(e.target.value)}
+          >
+            <option value="">Sélectionner un utilisateur</option>
+            {users.filter((u) => u.role !== "admin").map((user) => (
+              <option key={user.id} value={user.id}>
+                {user.username}
+              </option>
+            ))}
+          </select>
+          {selectedUser && (
+            <button
+              onClick={async () => {
+                if (!confirm("Supprimer cet utilisateur ?")) return;
+                const res = await fetch("/api/users/delete", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ userId: selectedUser }),
+                });
+                if (res.ok) {
+                  setUsers((prev) => prev.filter((u) => u.id !== selectedUser));
+                  setSelectedUser("");
+                }
+              }}
+              className="px-4 rounded bg-red-600 hover:bg-red-700 font-semibold"
+            >
+              Supprimer
+            </button>
+          )}
+        </div>
         {selectedUser && (
           <div className="flex flex-col gap-2">
             {categories.map((cat) => {
