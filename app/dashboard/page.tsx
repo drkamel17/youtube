@@ -87,6 +87,9 @@ function DashboardContent() {
     return true;
   });
 
+  const videoCounts: Record<number, number> = {};
+  videos.forEach((v) => { videoCounts[v.category_id] = (videoCounts[v.category_id] ?? 0) + 1; });
+
   return (
     <div className="flex min-h-screen bg-black text-white">
       <Sidebar />
@@ -97,6 +100,7 @@ function DashboardContent() {
             categories={categories}
             selected={selectedCategory}
             onSelect={setSelectedCategory}
+            counts={videoCounts}
           />
           <SearchBar value={search} onChange={setSearch} />
           <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
