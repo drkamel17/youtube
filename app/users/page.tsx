@@ -8,12 +8,15 @@ export default function UsersPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     setMsg("");
-    const email = `${username}@youtube-library.local`;
+    setLoading(true);
+    const email = `${username}@example.com`;
     const { error } = await signUp(email, password, username);
+    setLoading(false);
     if (error) {
       setMsg(`Erreur : ${error.message}`);
     } else {
@@ -45,8 +48,8 @@ export default function UsersPage() {
             required
             className="p-3 rounded bg-zinc-800"
           />
-          <button type="submit" className="p-3 rounded bg-red-600 hover:bg-red-700 font-semibold">
-            Ajouter
+          <button type="submit" disabled={loading} className="p-3 rounded bg-red-600 hover:bg-red-700 disabled:opacity-50 font-semibold">
+            {loading ? "Création..." : "Ajouter"}
           </button>
           {msg && <p className="text-sm text-zinc-400">{msg}</p>}
         </form>
