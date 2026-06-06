@@ -45,9 +45,15 @@ export default function Header() {
       <h1 className="text-xl font-bold">Dashboard</h1>
       {profile && (
         <div className="relative">
-          <button onClick={() => setOpen(!open)} className="text-sm text-zinc-400 hover:text-zinc-200">
-            {profile.username} ({profile.role})
-          </button>
+          {profile.role === "admin" ? (
+            <button onClick={() => setOpen(!open)} className="text-sm text-zinc-400 hover:text-zinc-200">
+              {profile.username} ({profile.role})
+            </button>
+          ) : (
+            <span className="text-sm text-zinc-400">
+              {profile.username} ({profile.role})
+            </span>
+          )}
           {open && (
             <div className="absolute right-0 top-8 w-72 bg-zinc-800 rounded-xl p-4 shadow-lg z-50">
               <h2 className="font-bold mb-3">Mon compte</h2>
