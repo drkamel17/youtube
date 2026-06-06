@@ -28,6 +28,7 @@ export default function CategoriesPage() {
   }
 
   async function deleteCategory(id: number) {
+    if (!confirm("Supprimer cette catégorie ?")) return;
     await supabase.from("categories").delete().eq("id", id);
     loadCategories();
   }

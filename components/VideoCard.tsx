@@ -25,6 +25,7 @@ export default function VideoCard({ video, isAdmin, onDelete }: Props) {
   }
 
   async function remove() {
+    if (!confirm("Supprimer cette vidéo ?")) return;
     await supabase.from("videos").delete().eq("id", video.id);
     onDelete?.(video.id);
   }
