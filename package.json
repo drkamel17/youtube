@@ -4,13 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build --webpack",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
-    "@supabase/auth-helpers-nextjs": "^0.15.0",
-    "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.107.0",
     "@types/sortablejs": "^1.15.9",
     "next": "16.2.7",
