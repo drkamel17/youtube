@@ -1,9 +1,10 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { signOut } from "@/lib/auth";
+import { getUserRole } from "@/lib/permissions";
 
 export default function Sidebar() {
   return (
@@ -17,7 +18,14 @@ function SidebarContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const [role, setRole] = useState<string | null>(null);
   const isFavPage = pathname === "/dashboard" && searchParams.get("fav") === "1";
+
+  useEffect(() => {
+    getUserRole().then(setRole);
+  }, []);
+
+  const isAdmin = role === "admin";
 
   const isActive = (href: string) => {
     if (href === "/dashboard?fav=1") return isFavPage;
@@ -25,13 +33,13 @@ function SidebarContent() {
   };
 
   const links = [
-    { href: "/dashboard", label: "Dashboard" },
-    { href: "/videos/add", label: "Ajouter vidéo" },
-    { href: "/categories", label: "Catégories" },
-    { href: "/dashboard?fav=1", label: "★ Favoris" },
-    { href: "/users", label: "Utilisateurs" },
-    { href: "/assign", label: "Assignation" },
-  ];
+    { href: "/dashboard", label: "Dashboard", adminOnly: false },
+    { href: "/videos/add", label: "Ajouter vidéo", adminOnly: true },
+    { href: "/categories", label: "Catégories", adminOnly: true },
+    { href: "/dashboard?fav=1", label: "★ Favoris", adminOnly: false },
+    { href: "/users", label: "Utilisateurs", adminOnly: true },
+    { href: "/assign", label: "Assignation", adminOnly: true },
+  ].filter((l) => !l.adminOnly || isAdmin);
 
   return (
     <aside className="w-64 bg-zinc-900 min-h-screen p-4 flex flex-col">

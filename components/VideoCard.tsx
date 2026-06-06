@@ -7,10 +7,11 @@ import Link from "next/link";
 
 type Props = {
   video: Video;
+  isAdmin?: boolean;
   onDelete?: (id: number) => void;
 };
 
-export default function VideoCard({ video, onDelete }: Props) {
+export default function VideoCard({ video, isAdmin, onDelete }: Props) {
   const videoId = video.youtube_url.includes("v=")
     ? new URL(video.youtube_url).searchParams.get("v")
     : video.youtube_url.split("/").pop();
@@ -41,12 +42,16 @@ export default function VideoCard({ video, onDelete }: Props) {
           <button onClick={toggleFavorite} className="text-sm px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700">
             {isFav ? "★" : "☆"}
           </button>
-          <Link href={`/videos/${video.id}/edit`} className="text-sm px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700">
-            Modifier
-          </Link>
-          <button onClick={remove} className="text-sm px-3 py-1 rounded bg-red-600 hover:bg-red-700">
-            Supprimer
-          </button>
+          {isAdmin && (
+            <>
+              <Link href={`/videos/${video.id}/edit`} className="text-sm px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700">
+                Modifier
+              </Link>
+              <button onClick={remove} className="text-sm px-3 py-1 rounded bg-red-600 hover:bg-red-700">
+                Supprimer
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

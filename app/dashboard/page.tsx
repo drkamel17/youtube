@@ -104,6 +104,7 @@ function DashboardContent() {
               <VideoCard
                 key={video.id}
                 video={video}
+                isAdmin={isAdmin}
                 onDelete={(id) => setVideos((prev) => prev.filter((v) => v.id !== id))}
               />
             ))}
