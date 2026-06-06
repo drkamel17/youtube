@@ -30,6 +30,8 @@ function DashboardContent() {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [perPage, setPerPage] = useState(20);
+  const [page, setPage] = useState(0);
   const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -80,12 +82,19 @@ function DashboardContent() {
     setVideos(vids ?? []);
   }
 
+  useEffect(() => {
+    setPage(0);
+  }, [selectedCategory, search, showFav]);
+
   const filtered = videos.filter((v) => {
     if (selectedCategory && v.category_id !== selectedCategory) return false;
     if (search && !v.title.toLowerCase().includes(search.toLowerCase())) return false;
     if (showFav && !v.favorite) return false;
     return true;
   });
+
+  const totalPages = Math.ceil(filtered.length / perPage);
+  const paginated = filtered.slice(page * perPage, (page + 1) * perPage);
 
   const videoCounts: Record<number, number> = {};
   videos.forEach((v) => { videoCounts[v.category_id] = (videoCounts[v.category_id] ?? 0) + 1; });
@@ -103,8 +112,20 @@ function DashboardContent() {
             counts={videoCounts}
           />
           <SearchBar value={search} onChange={setSearch} />
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-sm text-zinc-400">Par page :</span>
+            {[20, 30, 40, 50].map((n) => (
+              <button
+                key={n}
+                onClick={() => { setPerPage(n); setPage(0); }}
+                className={`px-3 py-1 rounded text-sm ${perPage === n ? "bg-red-600" : "bg-zinc-800 hover:bg-zinc-700"}`}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
           <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filtered.map((video) => (
+            {paginated.map((video) => (
               <VideoCard
                 key={video.id}
                 video={video}
@@ -113,6 +134,27 @@ function DashboardContent() {
               />
             ))}
           </div>
+          {totalPages > 1 && (
+            <div className="flex justify-center gap-2 mt-6">
+              <button
+                disabled={page === 0}
+                onClick={() => setPage((p) => p - 1)}
+                className="px-4 py-2 rounded bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40"
+              >
+                ←
+              </button>
+              <span className="px-4 py-2 text-sm text-zinc-400">
+                {page + 1} / {totalPages}
+              </span>
+              <button
+                disabled={page >= totalPages - 1}
+                onClick={() => setPage((p) => p + 1)}
+                className="px-4 py-2 rounded bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40"
+              >
+                →
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
