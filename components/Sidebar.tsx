@@ -1,12 +1,28 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { signOut } from "@/lib/auth";
 
 export default function Sidebar() {
+  return (
+    <Suspense fallback={null}>
+      <SidebarContent />
+    </Suspense>
+  );
+}
+
+function SidebarContent() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
+  const isFavPage = pathname === "/dashboard" && searchParams.get("fav") === "1";
+
+  const isActive = (href: string) => {
+    if (href === "/dashboard?fav=1") return isFavPage;
+    return pathname === href;
+  };
 
   const links = [
     { href: "/dashboard", label: "Dashboard" },
@@ -26,7 +42,7 @@ export default function Sidebar() {
             key={link.href}
             href={link.href}
             className={`p-3 rounded ${
-              pathname === link.href
+              isActive(link.href)
                 ? "bg-red-600 text-white"
                 : "hover:bg-zinc-800"
             }`}
