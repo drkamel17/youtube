@@ -32,6 +32,7 @@ function DashboardContent() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [perPage, setPerPage] = useState(20);
   const [page, setPage] = useState(0);
+  const [showExport, setShowExport] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -99,6 +100,24 @@ function DashboardContent() {
   const videoCounts: Record<number, number> = {};
   videos.forEach((v) => { videoCounts[v.category_id] = (videoCounts[v.category_id] ?? 0) + 1; });
 
+  function exportCSV(categoryId: number | "all") {
+    const data = categoryId === "all" ? filtered : videos.filter((v) => v.category_id === categoryId);
+
+    const catName = (id: number) => categories.find((c) => c.id === id)?.name ?? "";
+    const headers = "Titre,URL YouTube,Catégorie,Favori";
+    const rows = data.map((v) =>
+      `"${v.title}",${v.youtube_url},"${catName(v.category_id)}",${v.favorite ? "Oui" : "Non"}`
+    );
+    const csv = [headers, ...rows].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `videos_${categoryId === "all" ? "toutes" : `cat${categoryId}`}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    setShowExport(false);
+  }
+
   return (
     <div className="flex min-h-screen bg-black text-white">
       <Sidebar />
@@ -112,17 +131,27 @@ function DashboardContent() {
             counts={videoCounts}
           />
           <SearchBar value={search} onChange={setSearch} />
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-sm text-zinc-400">Par page :</span>
-            {[20, 30, 40, 50].map((n) => (
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-zinc-400">Par page :</span>
+              {[20, 30, 40, 50].map((n) => (
+                <button
+                  key={n}
+                  onClick={() => { setPerPage(n); setPage(0); }}
+                  className={`px-3 py-1 rounded text-sm ${perPage === n ? "bg-red-600" : "bg-zinc-800 hover:bg-zinc-700"}`}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+            {isAdmin && (
               <button
-                key={n}
-                onClick={() => { setPerPage(n); setPage(0); }}
-                className={`px-3 py-1 rounded text-sm ${perPage === n ? "bg-red-600" : "bg-zinc-800 hover:bg-zinc-700"}`}
+                onClick={() => setShowExport(true)}
+                className="px-4 py-2 rounded bg-green-700 hover:bg-green-600 text-sm font-semibold"
               >
-                {n}
+                Exporter CSV
               </button>
-            ))}
+            )}
           </div>
           <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {paginated.map((video) => (
@@ -153,6 +182,38 @@ function DashboardContent() {
               >
                 →
               </button>
+            </div>
+          )}
+
+          {showExport && (
+            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+              <div className="bg-zinc-900 rounded-xl p-6 w-80">
+                <h3 className="text-lg font-bold mb-4">Exporter en CSV</h3>
+                <p className="text-sm text-zinc-400 mb-4">Choisir les vidéos à exporter :</p>
+                <button
+                  onClick={() => exportCSV("all")}
+                  className="w-full p-3 rounded bg-green-700 hover:bg-green-600 font-semibold mb-2"
+                >
+                  Toutes les vidéos
+                </button>
+                <div className="flex flex-col gap-2 max-h-40 overflow-y-auto mb-4">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => exportCSV(cat.id)}
+                      className="w-full p-2 rounded bg-zinc-800 hover:bg-zinc-700 text-sm text-left"
+                    >
+                      {cat.name} ({videos.filter((v) => v.category_id === cat.id).length})
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setShowExport(false)}
+                  className="w-full p-2 rounded bg-zinc-800 hover:bg-zinc-700 text-sm"
+                >
+                  Annuler
+                </button>
+              </div>
             </div>
           )}
         </div>
