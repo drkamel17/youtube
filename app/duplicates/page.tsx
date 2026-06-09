@@ -13,6 +13,16 @@ type Group = {
 export default function DuplicatesPage() {
   const [groups, setGroups] = useState<Group[]>([]);
 
+  function getVideoId(url: string): string {
+    try {
+      const u = new URL(url);
+      if (u.hostname.includes("youtu.be")) return u.pathname.slice(1).split("?")[0];
+      return u.searchParams.get("v") ?? url;
+    } catch {
+      return url;
+    }
+  }
+
   useEffect(() => {
     loadDuplicates();
   }, []);
@@ -23,13 +33,14 @@ export default function DuplicatesPage() {
 
     const map = new Map<string, Video[]>();
     for (const v of data) {
-      if (!map.has(v.youtube_url)) map.set(v.youtube_url, []);
-      map.get(v.youtube_url)!.push(v);
+      const id = getVideoId(v.youtube_url);
+      if (!map.has(id)) map.set(id, []);
+      map.get(id)!.push(v);
     }
 
     const gs: Group[] = [];
-    for (const [url, videos] of map) {
-      if (videos.length > 1) gs.push({ url, videos });
+    for (const [, videos] of map) {
+      if (videos.length > 1) gs.push({ url: videos[0].youtube_url, videos });
     }
     gs.sort((a, b) => b.videos.length - a.videos.length);
     setGroups(gs);
