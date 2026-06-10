@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Video } from "@/types/database";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
@@ -17,6 +17,10 @@ export default function VideoCard({ video, isAdmin, onDelete }: Props) {
     : video.youtube_url.split("/").pop();
 
   const [isFav, setIsFav] = useState(video.favorite);
+
+  useEffect(() => {
+    setIsFav(video.favorite);
+  }, [video.id, video.favorite]);
 
   async function toggleFavorite() {
     const newFav = !isFav;

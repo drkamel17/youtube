@@ -79,6 +79,7 @@ drop policy if exists "admin full access categories" on categories;
 drop policy if exists "user read categories" on categories;
 drop policy if exists "admin full access videos" on videos;
 drop policy if exists "user read allowed videos" on videos;
+drop policy if exists "user update favorite videos" on videos;
 drop policy if exists "admin all profiles" on profiles;
 drop policy if exists "user read own profile" on profiles;
 drop policy if exists "admin all user_categories" on user_categories;
@@ -96,6 +97,21 @@ create policy "admin full access videos" on videos
 
 create policy "user read allowed videos" on videos
     for select using (
+        not public.is_admin()
+        and category_id in (
+            select category_id from user_categories
+            where user_id = auth.uid()
+        )
+    );
+
+create policy "user update favorite videos" on videos
+    for update using (
+        not public.is_admin()
+        and category_id in (
+            select category_id from user_categories
+            where user_id = auth.uid()
+        )
+    ) with check (
         not public.is_admin()
         and category_id in (
             select category_id from user_categories
