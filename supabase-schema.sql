@@ -154,11 +154,25 @@ on page_views for insert
 with check (auth.role() = 'authenticated');
 
 -- ============================================
+-- 6. USER_FAVORITES (favoris par utilisateur)
+-- ============================================
+create table if not exists user_favorites (
+    user_id uuid references profiles(id) on delete cascade,
+    video_id bigint references videos(id) on delete cascade,
+    created_at timestamp default now(),
+    primary key (user_id, video_id)
+);
+
+alter table user_favorites enable row level security;
+
+create policy "user manage own favorites" on user_favorites
+    for all using (auth.uid() = user_id);
+
+-- ============================================
 -- INDEX
 -- ============================================
 create index if not exists idx_videos_category on videos(category_id);
 create index if not exists idx_videos_position on videos(position);
-create index if not exists idx_videos_favorite on videos(favorite);
 create index if not exists idx_user_categories_user on user_categories(user_id);
 create index if not exists idx_page_views_user on page_views(user_id);
 create index if not exists idx_page_views_page on page_views(page);

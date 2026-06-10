@@ -1,38 +1,30 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import type { Video } from "@/types/database";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 
 type Props = {
   video: Video;
+  isFav: boolean;
   isAdmin?: boolean;
   onDelete?: (id: number) => void;
   onToggleFav?: (id: number, fav: boolean) => void;
 };
 
-export default function VideoCard({ video, isAdmin, onDelete, onToggleFav }: Props) {
+export default function VideoCard({ video, isFav, isAdmin, onDelete, onToggleFav }: Props) {
   const videoId = video.youtube_url.includes("v=")
     ? new URL(video.youtube_url).searchParams.get("v")
     : video.youtube_url.split("/").pop();
 
-  const [isFav, setIsFav] = useState(video.favorite);
-
-  useEffect(() => {
-    setIsFav(video.favorite);
-  }, [video.id, video.favorite]);
-
   async function toggleFavorite() {
     const newFav = !isFav;
-    setIsFav(newFav);
-    const { error } = await supabase.from("videos").update({ favorite: newFav }).eq("id", video.id);
-    if (error) {
-      console.error("Favorite toggle error:", error.message);
-      setIsFav(!newFav);
+    if (newFav) {
+      await supabase.from("user_favorites").insert({ video_id: video.id });
     } else {
-      onToggleFav?.(video.id, newFav);
+      await supabase.from("user_favorites").delete().eq("video_id", video.id);
     }
+    onToggleFav?.(video.id, newFav);
   }
 
   async function remove() {

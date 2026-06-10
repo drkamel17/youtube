@@ -25,6 +25,12 @@ export type UserCategory = {
   category_id: number;
 };
 
+export type UserFavorite = {
+  user_id: string;
+  video_id: number;
+  created_at: string;
+};
+
 export type PageView = {
   id: number;
   user_id: string;

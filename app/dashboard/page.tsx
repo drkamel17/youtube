@@ -27,6 +27,7 @@ function DashboardContent() {
 
   const [videos, setVideos] = useState<Video[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -83,6 +84,9 @@ function DashboardContent() {
     query = query.order("position");
     const { data: vids } = await query;
     setVideos(vids ?? []);
+
+    const { data: favs } = await supabase.from("user_favorites").select("video_id").eq("user_id", user.id);
+    setFavoriteIds(new Set(favs?.map((f) => f.video_id) ?? []));
   }
 
   useEffect(() => {
@@ -92,7 +96,7 @@ function DashboardContent() {
   const filtered = videos.filter((v) => {
     if (selectedCategory && v.category_id !== selectedCategory) return false;
     if (search && !v.title.toLowerCase().includes(search.toLowerCase())) return false;
-    if (showFav && !v.favorite) return false;
+    if (showFav && !favoriteIds.has(v.id)) return false;
     return true;
   });
 
@@ -106,9 +110,9 @@ function DashboardContent() {
     const data = categoryId === "all" ? filtered : videos.filter((v) => v.category_id === categoryId);
 
     const catName = (id: number) => categories.find((c) => c.id === id)?.name ?? "";
-    const headers = "Titre,URL YouTube,Catégorie,Favori";
+    const headers = "Titre,URL YouTube,Catégorie";
     const rows = data.map((v) =>
-      `"${v.title}",${v.youtube_url},"${catName(v.category_id)}",${v.favorite ? "Oui" : "Non"}`
+      `"${v.title}",${v.youtube_url},"${catName(v.category_id)}"`
     );
     const csv = [headers, ...rows].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
@@ -161,10 +165,15 @@ function DashboardContent() {
               <VideoCard
                 key={video.id}
                 video={video}
+                isFav={favoriteIds.has(video.id)}
                 isAdmin={isAdmin}
                 onDelete={(id) => setVideos((prev) => prev.filter((v) => v.id !== id))}
                 onToggleFav={(id, fav) =>
-                  setVideos((prev) => prev.map((v) => (v.id === id ? { ...v, favorite: fav } : v)))
+                  setFavoriteIds((prev) => {
+                    const next = new Set(prev);
+                    if (fav) next.add(id); else next.delete(id);
+                    return next;
+                  })
                 }
               />
             ))}
