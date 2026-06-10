@@ -163,6 +163,9 @@ function DashboardContent() {
                 video={video}
                 isAdmin={isAdmin}
                 onDelete={(id) => setVideos((prev) => prev.filter((v) => v.id !== id))}
+                onToggleFav={(id, fav) =>
+                  setVideos((prev) => prev.map((v) => (v.id === id ? { ...v, favorite: fav } : v)))
+                }
               />
             ))}
           </div>

@@ -9,9 +9,10 @@ type Props = {
   video: Video;
   isAdmin?: boolean;
   onDelete?: (id: number) => void;
+  onToggleFav?: (id: number, fav: boolean) => void;
 };
 
-export default function VideoCard({ video, isAdmin, onDelete }: Props) {
+export default function VideoCard({ video, isAdmin, onDelete, onToggleFav }: Props) {
   const videoId = video.youtube_url.includes("v=")
     ? new URL(video.youtube_url).searchParams.get("v")
     : video.youtube_url.split("/").pop();
@@ -25,7 +26,13 @@ export default function VideoCard({ video, isAdmin, onDelete }: Props) {
   async function toggleFavorite() {
     const newFav = !isFav;
     setIsFav(newFav);
-    await supabase.from("videos").update({ favorite: newFav }).eq("id", video.id);
+    const { error } = await supabase.from("videos").update({ favorite: newFav }).eq("id", video.id);
+    if (error) {
+      console.error("Favorite toggle error:", error.message);
+      setIsFav(!newFav);
+    } else {
+      onToggleFav?.(video.id, newFav);
+    }
   }
 
   async function remove() {
