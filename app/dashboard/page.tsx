@@ -28,6 +28,7 @@ function DashboardContent() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
+  const [userId, setUserId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -63,6 +64,7 @@ function DashboardContent() {
 
     const role = await getUserRole();
     setIsAdmin(role === "admin");
+    setUserId(user.id);
 
     let query = supabase.from("videos").select("*");
 
@@ -167,6 +169,7 @@ function DashboardContent() {
                 video={video}
                 isFav={favoriteIds.has(video.id)}
                 isAdmin={isAdmin}
+                userId={userId}
                 onDelete={(id) => setVideos((prev) => prev.filter((v) => v.id !== id))}
                 onToggleFav={(id, fav) =>
                   setFavoriteIds((prev) => {

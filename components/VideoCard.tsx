@@ -7,22 +7,26 @@ import Link from "next/link";
 type Props = {
   video: Video;
   isFav: boolean;
+  userId: string | null;
   isAdmin?: boolean;
   onDelete?: (id: number) => void;
   onToggleFav?: (id: number, fav: boolean) => void;
 };
 
-export default function VideoCard({ video, isFav, isAdmin, onDelete, onToggleFav }: Props) {
+export default function VideoCard({ video, isFav, userId, isAdmin, onDelete, onToggleFav }: Props) {
   const videoId = video.youtube_url.includes("v=")
     ? new URL(video.youtube_url).searchParams.get("v")
     : video.youtube_url.split("/").pop();
 
   async function toggleFavorite() {
     const newFav = !isFav;
+    if (!userId) return;
     if (newFav) {
-      await supabase.from("user_favorites").insert({ video_id: video.id });
+      const { error } = await supabase.from("user_favorites").insert({ user_id: userId, video_id: video.id });
+      if (error) console.error("Fav insert error:", error.message);
     } else {
-      await supabase.from("user_favorites").delete().eq("video_id", video.id);
+      const { error } = await supabase.from("user_favorites").delete().eq("user_id", userId).eq("video_id", video.id);
+      if (error) console.error("Fav delete error:", error.message);
     }
     onToggleFav?.(video.id, newFav);
   }
