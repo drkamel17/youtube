@@ -63,19 +63,21 @@ function DashboardContent() {
     const role = await getUserRole();
     setIsAdmin(role === "admin");
 
-    const { data: cats } = await supabase.from("categories").select("*").order("name");
-    setCategories(cats ?? []);
-
     let query = supabase.from("videos").select("*");
 
     if (role !== "admin") {
       const allowed = await getAllowedCategories(user.id);
       if (allowed.length > 0) {
         query = query.in("category_id", allowed);
+        const { data: cats } = await supabase.from("categories").select("*").in("id", allowed).order("name");
+        setCategories(cats ?? []);
       } else {
         setVideos([]);
         return;
       }
+    } else {
+      const { data: cats } = await supabase.from("categories").select("*").order("name");
+      setCategories(cats ?? []);
     }
 
     query = query.order("position");
@@ -129,6 +131,7 @@ function DashboardContent() {
             selected={selectedCategory}
             onSelect={setSelectedCategory}
             counts={videoCounts}
+            showAll={isAdmin}
           />
           <SearchBar value={search} onChange={setSearch} />
           <div className="flex items-center justify-between gap-4 mb-4">

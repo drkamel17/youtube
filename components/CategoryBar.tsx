@@ -7,19 +7,22 @@ type Props = {
   selected: number | null;
   onSelect: (id: number | null) => void;
   counts?: Record<number, number>;
+  showAll?: boolean;
 };
 
-export default function CategoryBar({ categories, selected, onSelect, counts }: Props) {
+export default function CategoryBar({ categories, selected, onSelect, counts, showAll = true }: Props) {
   const total = categories.reduce((s, c) => s + (counts?.[c.id] ?? 0), 0);
 
   return (
     <div className="flex gap-2 flex-wrap mb-4">
-      <button
-        onClick={() => onSelect(null)}
-        className={`px-4 py-2 rounded ${selected === null ? "bg-red-600" : "bg-zinc-800 hover:bg-zinc-700"}`}
-      >
-        Toutes ({total})
-      </button>
+      {showAll && (
+        <button
+          onClick={() => onSelect(null)}
+          className={`px-4 py-2 rounded ${selected === null ? "bg-red-600" : "bg-zinc-800 hover:bg-zinc-700"}`}
+        >
+          Toutes ({total})
+        </button>
+      )}
       {categories.map((cat) => (
         <button
           key={cat.id}
