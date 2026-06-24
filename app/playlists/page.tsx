@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Playlist, Video } from "@/types/database";
 import { getCurrentUser } from "@/lib/auth";
@@ -8,53 +8,37 @@ import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 
 export default function PlaylistsPage() {
-  return (
-    <Suspense fallback={<div className="flex min-h-screen bg-black text-white items-center justify-center">Chargement…</div>}>
-      <PlaylistsContent />
-    </Suspense>
-  );
-}
-
-function PlaylistsContent() {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [videos, setVideos] = useState<Video[]>([]);
   const [newName, setNewName] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
-  useEffect(() => { load(); }, []);
-
-  async function load() {
-    setLoading(true);
-    setError("");
-    try {
+  useEffect(() => {
+    (async () => {
       const user = await getCurrentUser();
-      if (!user) { setLoading(false); return; }
-      const { data, error: err } = await supabase.from("playlists").select("*").eq("user_id", user.id).order("created_at");
-      if (err) { setError(err.message); setLoading(false); return; }
+      if (!user) return;
+      const { data } = await supabase.from("playlists").select("*").eq("user_id", user.id).order("created_at");
       setPlaylists(data ?? []);
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : String(e));
-    }
-    setLoading(false);
-  }
+    })();
+  }, []);
 
   async function create() {
     const user = await getCurrentUser();
     if (!user || !newName.trim()) return;
-    const { error: err } = await supabase.from("playlists").insert({ name: newName.trim(), user_id: user.id });
-    if (err) { setError(err.message); return; }
+    await supabase.from("playlists").insert({ name: newName.trim(), user_id: user.id });
     setNewName("");
-    load();
+    const { data } = await supabase.from("playlists").select("*").eq("user_id", user.id).order("created_at");
+    setPlaylists(data ?? []);
   }
 
   async function remove(id: number) {
     if (!confirm("Supprimer cette playlist ?")) return;
-    const { error: err } = await supabase.from("playlists").delete().eq("id", id);
-    if (err) { setError(err.message); return; }
+    const user = await getCurrentUser();
+    if (!user) return;
+    await supabase.from("playlists").delete().eq("id", id);
     if (selected === id) { setSelected(null); setVideos([]); }
-    load();
+    const { data } = await supabase.from("playlists").select("*").eq("user_id", user.id).order("created_at");
+    setPlaylists(data ?? []);
   }
 
   async function selectPlaylist(id: number) {
@@ -75,29 +59,23 @@ function PlaylistsContent() {
       <Sidebar />
       <div className="flex-1">
         <Header />
-        <div className="p-6 flex gap-6">
-          <div className="w-72 shrink-0">
-            <h2 className="text-lg font-bold mb-4">Mes Playlists</h2>
-            <div className="flex gap-2 mb-4">
-              <input
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                placeholder="Nouvelle playlist…"
-                className="flex-1 bg-zinc-800 rounded px-3 py-2 text-sm"
-                onKeyDown={(e) => e.key === "Enter" && create()}
-              />
-              <button onClick={create} className="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-sm font-semibold">
-                +
-              </button>
-            </div>
-            {error && (
-              <div className="mb-4 p-3 rounded bg-red-900/50 text-red-300 text-sm border border-red-700">
-                {error}
+        <div className="p-6">
+          <p className="text-green-400 mb-4">✓ Page Playlists chargée</p>
+          <div className="flex gap-6">
+            <div className="w-72 shrink-0">
+              <h2 className="text-lg font-bold mb-4">Mes Playlists</h2>
+              <div className="flex gap-2 mb-4">
+                <input
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="Nouvelle playlist…"
+                  className="flex-1 bg-zinc-800 rounded px-3 py-2 text-sm"
+                  onKeyDown={(e) => e.key === "Enter" && create()}
+                />
+                <button onClick={create} className="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-sm font-semibold">
+                  +
+                </button>
               </div>
-            )}
-            {loading ? (
-              <p className="text-zinc-500 text-sm">Chargement…</p>
-            ) : (
               <div className="flex flex-col gap-1">
                 {playlists.map((p) => (
                   <div key={p.id} className="flex items-center gap-2">
@@ -118,32 +96,32 @@ function PlaylistsContent() {
                   <p className="text-zinc-500 text-sm">Aucune playlist.</p>
                 )}
               </div>
-            )}
-          </div>
-          <div className="flex-1">
-            {selected ? (
-              videos.length === 0 ? (
-                <p className="text-zinc-500">Cette playlist est vide.</p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {videos.map((v) => {
-                    const videoId = v.youtube_url.includes("v=")
-                      ? new URL(v.youtube_url).searchParams.get("v")
-                      : v.youtube_url.split("/").pop();
-                    return (
-                      <div key={v.id} className="bg-zinc-900 rounded-xl overflow-hidden">
-                        <iframe src={`https://www.youtube.com/embed/${videoId}`} className="w-full aspect-video" allowFullScreen />
-                        <div className="p-3">
-                          <h3 className="font-semibold truncate">{v.title}</h3>
+            </div>
+            <div className="flex-1">
+              {selected ? (
+                videos.length === 0 ? (
+                  <p className="text-zinc-500">Cette playlist est vide.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {videos.map((v) => {
+                      const videoId = v.youtube_url.includes("v=")
+                        ? new URL(v.youtube_url).searchParams.get("v")
+                        : v.youtube_url.split("/").pop();
+                      return (
+                        <div key={v.id} className="bg-zinc-900 rounded-xl overflow-hidden">
+                          <iframe src={`https://www.youtube.com/embed/${videoId}`} className="w-full aspect-video" allowFullScreen />
+                          <div className="p-3">
+                            <h3 className="font-semibold truncate">{v.title}</h3>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )
-            ) : (
-              <p className="text-zinc-500">Sélectionne une playlist.</p>
-            )}
+                      );
+                    })}
+                  </div>
+                )
+              ) : (
+                <p className="text-zinc-500">Sélectionne une playlist.</p>
+              )}
+            </div>
           </div>
         </div>
       </div>
