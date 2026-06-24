@@ -21,29 +21,38 @@ function PlaylistsContent() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [newName, setNewName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => { load(); }, []);
 
   async function load() {
     setLoading(true);
-    const user = await getCurrentUser();
-    if (!user) { setLoading(false); return; }
-    const { data } = await supabase.from("playlists").select("*").eq("user_id", user.id).order("created_at");
-    setPlaylists(data ?? []);
+    setError("");
+    try {
+      const user = await getCurrentUser();
+      if (!user) { setLoading(false); return; }
+      const { data, error: err } = await supabase.from("playlists").select("*").eq("user_id", user.id).order("created_at");
+      if (err) { setError(err.message); setLoading(false); return; }
+      setPlaylists(data ?? []);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
     setLoading(false);
   }
 
   async function create() {
     const user = await getCurrentUser();
     if (!user || !newName.trim()) return;
-    await supabase.from("playlists").insert({ name: newName.trim(), user_id: user.id });
+    const { error: err } = await supabase.from("playlists").insert({ name: newName.trim(), user_id: user.id });
+    if (err) { setError(err.message); return; }
     setNewName("");
     load();
   }
 
   async function remove(id: number) {
     if (!confirm("Supprimer cette playlist ?")) return;
-    await supabase.from("playlists").delete().eq("id", id);
+    const { error: err } = await supabase.from("playlists").delete().eq("id", id);
+    if (err) { setError(err.message); return; }
     if (selected === id) { setSelected(null); setVideos([]); }
     load();
   }
@@ -81,6 +90,11 @@ function PlaylistsContent() {
                 +
               </button>
             </div>
+            {error && (
+              <div className="mb-4 p-3 rounded bg-red-900/50 text-red-300 text-sm border border-red-700">
+                {error}
+              </div>
+            )}
             {loading ? (
               <p className="text-zinc-500 text-sm">Chargement…</p>
             ) : (
