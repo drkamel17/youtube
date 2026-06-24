@@ -175,6 +175,7 @@ create table if not exists playlists (
     id bigint generated always as identity primary key,
     name text not null,
     user_id uuid references profiles(id) on delete cascade not null,
+    youtube_playlist_id text,
     created_at timestamp default now()
 );
 
@@ -183,35 +184,7 @@ alter table playlists enable row level security;
 create policy "user manage own playlists" on playlists
     for all using (auth.uid() = user_id);
 
-create table if not exists playlist_videos (
-    playlist_id bigint references playlists(id) on delete cascade,
-    video_id bigint references videos(id) on delete cascade,
-    position int default 0,
-    primary key (playlist_id, video_id)
-);
-
-alter table playlist_videos enable row level security;
-
-create policy "user read own playlist_videos" on playlist_videos
-    for select using (
-        playlist_id in (
-            select id from playlists where user_id = auth.uid()
-        )
-    );
-
-create policy "user write own playlist_videos" on playlist_videos
-    for insert with check (
-        playlist_id in (
-            select id from playlists where user_id = auth.uid()
-        )
-    );
-
-create policy "user delete own playlist_videos" on playlist_videos
-    for delete using (
-        playlist_id in (
-            select id from playlists where user_id = auth.uid()
-        )
-    );
+alter table playlists add column if not exists youtube_playlist_id text;
 
 -- ============================================
 -- INDEX

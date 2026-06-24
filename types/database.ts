@@ -42,6 +42,7 @@ export type Playlist = {
   id: number;
   name: string;
   user_id: string;
+  youtube_playlist_id: string | null;
   created_at: string;
 };
 
