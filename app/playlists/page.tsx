@@ -20,14 +20,17 @@ function PlaylistsContent() {
   const [selected, setSelected] = useState<number | null>(null);
   const [videos, setVideos] = useState<Video[]>([]);
   const [newName, setNewName] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => { load(); }, []);
 
   async function load() {
+    setLoading(true);
     const user = await getCurrentUser();
-    if (!user) return;
+    if (!user) { setLoading(false); return; }
     const { data } = await supabase.from("playlists").select("*").eq("user_id", user.id).order("created_at");
     setPlaylists(data ?? []);
+    setLoading(false);
   }
 
   async function create() {
@@ -72,28 +75,36 @@ function PlaylistsContent() {
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="Nouvelle playlist…"
                 className="flex-1 bg-zinc-800 rounded px-3 py-2 text-sm"
+                onKeyDown={(e) => e.key === "Enter" && create()}
               />
               <button onClick={create} className="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-sm font-semibold">
                 +
               </button>
             </div>
-            <div className="flex flex-col gap-1">
-              {playlists.map((p) => (
-                <div key={p.id} className="flex items-center gap-2">
-                  <button
-                    onClick={() => selectPlaylist(p.id)}
-                    className={`flex-1 text-left p-3 rounded text-sm ${
-                      selected === p.id ? "bg-red-600" : "bg-zinc-800 hover:bg-zinc-700"
-                    }`}
-                  >
-                    {p.name}
-                  </button>
-                  <button onClick={() => remove(p.id)} className="p-2 text-zinc-500 hover:text-red-400 text-sm">
-                    ✕
-                  </button>
-                </div>
-              ))}
-            </div>
+            {loading ? (
+              <p className="text-zinc-500 text-sm">Chargement…</p>
+            ) : (
+              <div className="flex flex-col gap-1">
+                {playlists.map((p) => (
+                  <div key={p.id} className="flex items-center gap-2">
+                    <button
+                      onClick={() => selectPlaylist(p.id)}
+                      className={`flex-1 text-left p-3 rounded text-sm ${
+                        selected === p.id ? "bg-red-600" : "bg-zinc-800 hover:bg-zinc-700"
+                      }`}
+                    >
+                      {p.name}
+                    </button>
+                    <button onClick={() => remove(p.id)} className="p-2 text-zinc-500 hover:text-red-400 text-sm">
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                {playlists.length === 0 && (
+                  <p className="text-zinc-500 text-sm">Aucune playlist.</p>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex-1">
             {selected ? (
