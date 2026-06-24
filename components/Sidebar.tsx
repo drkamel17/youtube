@@ -34,6 +34,7 @@ function SidebarContent() {
 
   const links = [
     { href: "/dashboard", label: "Dashboard", adminOnly: false },
+    { href: "/playlists", label: "Playlists", adminOnly: false },
     { href: "/videos/add", label: "Ajouter vidéo", adminOnly: true },
     { href: "/categories", label: "Catégories", adminOnly: true },
     { href: "/dashboard?fav=1", label: "★ Favoris", adminOnly: false },

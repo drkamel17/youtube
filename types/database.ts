@@ -37,3 +37,16 @@ export type PageView = {
   page: string;
   visited_at: string;
 };
+
+export type Playlist = {
+  id: number;
+  name: string;
+  user_id: string;
+  created_at: string;
+};
+
+export type PlaylistVideo = {
+  playlist_id: number;
+  video_id: number;
+  position: number;
+};
