@@ -60,7 +60,6 @@ export default function PlaylistsPage() {
       <div className="flex-1">
         <Header />
         <div className="p-6">
-          <p className="text-green-400 mb-4">✓ Page Playlists chargée</p>
           <div className="flex gap-6">
             <div className="w-72 shrink-0">
               <h2 className="text-lg font-bold mb-4">Mes Playlists</h2>
